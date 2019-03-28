@@ -30,25 +30,27 @@ func (bs *blogServer) getPostByID(id int32) (*pb.Post, error) {
 			return post, nil
 		}
 	}
-	log.Warn("Post not found")
 	return nil, errors.New("Post not found")
 }
 
-func (bs *blogServer) loadPosts(filePath string) {
+func (bs *blogServer) loadPosts(filePath string) error {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Error("Failed to load posts:", err)
-		return
+		return err
 	}
 	if err = json.Unmarshal(data, &bs.savedPosts); err != nil {
-		log.Error("Failed to load posts:", err)
-		return
+		return err
 	}
+	return nil
 }
 
-func newServer() *blogServer {
+func newServer(filePath string) *blogServer {
 	bs := &blogServer{}
-	bs.loadPosts("posts.json")
+	err := bs.loadPosts(filePath)
+	if err != nil {
+		log.Error("Failed to load posts: ", err)
+		return nil
+	}
 	return bs
 }
 
@@ -59,6 +61,6 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterBlogServer(grpcServer, newServer())
+	pb.RegisterBlogServer(grpcServer, newServer("posts.json"))
 	grpcServer.Serve(lis)
 }
