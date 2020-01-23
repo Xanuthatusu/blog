@@ -1,4 +1,4 @@
-test:
+test: generate
 	go test -v ./...
 
 install:
@@ -7,7 +7,7 @@ install:
 	rm protoc.zip
 	go get ./...
 
-generate:
+generate: install
 	protoc/bin/protoc -I protos protos/blog.proto --go_out=plugins=grpc:protos
 
 clean:
