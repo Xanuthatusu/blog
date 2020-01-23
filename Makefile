@@ -8,7 +8,7 @@ install:
 	go get ./...
 
 generate: install
-	protoc/bin/protoc -I protos protos/blog.proto --go_out=plugins=grpc:protos
+	protoc-3.11.2-osx-x86_64/bin/protoc -I protos protos/blog.proto --go_out=plugins=grpc:protos
 
 clean:
 	rm -rf protoc-3.11.2-osx-x86_64
