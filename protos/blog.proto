@@ -5,9 +5,16 @@ syntax = "proto3";
 package blog;
 
 service Blog {
-  rpc GetPost(Post) returns (Post);
+  rpc GetPost(GetPostReq) returns (Post);
   rpc CreatePost(Post) returns (Post);
+  rpc ListPosts(ListPostsReq) returns (stream Post);
 }
+
+message GetPostReq {
+  int32 id = 1;
+}
+
+message ListPostsReq {}
 
 message Post {
   int32 id = 1;

@@ -5,8 +5,9 @@ package main
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	"time"
+
+	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
 	pb "github.com/xanuthatusu/blog/protos"
@@ -25,7 +26,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	post := &pb.Post{
+	post := &pb.GetPostReq{
 		Id: 1,
 	}
 
