@@ -7,9 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"google.golang.org/grpc"
 	"io/ioutil"
 	"net"
+
+	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
 	pb "github.com/xanuthatusu/blog/protos"
@@ -31,6 +32,15 @@ func (bs *blogServer) getPostByID(id int32) (*pb.Post, error) {
 		}
 	}
 	return nil, errors.New("Post not found")
+}
+
+func (bs *blogServer) CreatePost(ctx context.Context, post *pb.Post) (*pb.Post, error) {
+	log.WithFields(log.Fields{
+		"post": post,
+	}).Info("Creating post")
+
+	bs.savedPosts = append(bs.savedPosts, post)
+	return post, nil
 }
 
 func (bs *blogServer) loadPosts(filePath string) error {
@@ -62,5 +72,8 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterBlogServer(grpcServer, newServer("posts.json"))
-	grpcServer.Serve(lis)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		panic(err)
+	}
 }

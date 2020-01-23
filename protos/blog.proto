@@ -6,6 +6,7 @@ package blog;
 
 service Blog {
   rpc GetPost(Post) returns (Post);
+  rpc CreatePost(Post) returns (Post);
 }
 
 message Post {
