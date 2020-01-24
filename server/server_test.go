@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"testing"
 
 	pb "github.com/xanuthatusu/blog/protos"
@@ -38,20 +39,41 @@ func startServer() (net.Listener, error) {
 	return lis, nil
 }
 
-func TestServer(t *testing.T) {
-	bs := server.New("../posts.json")
+func TestMain(m *testing.M) {
+	var err error
 
-	resp, err := bs.GetPost(context.Background(), &pb.GetPostReq{Id: 1})
+	lis, err = startServer()
 	if err != nil {
-		t.Errorf("Error in GetPost: %v", err)
+		fmt.Println(err)
+		return
 	}
-	if resp.Title != "test post" {
-		t.Errorf("Post.Title was incorrect, got: %s, want: %s", resp.Title, "test post")
+
+	exitCode := m.Run()
+
+	err = lis.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+
+	os.Exit(exitCode)
+}
+
+func dialServer() (*grpc.ClientConn, pb.BlogClient, error) {
+	conn, err := grpc.Dial(":5334", grpc.WithInsecure())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return conn, pb.NewBlogClient(conn), nil
 }
 
 func TestCreatePost(t *testing.T) {
-	bs := server.New("../posts.json")
+	conn, bClient, err := dialServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
 
 	post := &pb.Post{
 		Id:    2,
@@ -64,7 +86,7 @@ func TestCreatePost(t *testing.T) {
 		},
 	}
 
-	resp, err := bs.CreatePost(context.Background(), post)
+	resp, err := bClient.CreatePost(context.Background(), post)
 	if err != nil {
 		t.Errorf("Error in CreatePost: %v", err)
 	}
@@ -74,19 +96,11 @@ func TestCreatePost(t *testing.T) {
 }
 
 func TestListPosts(t *testing.T) {
-	l, err := startServer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer l.Close()
-
-	conn, err := grpc.Dial(":5334", grpc.WithInsecure())
+	conn, bClient, err := dialServer()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-
-	bClient := pb.NewBlogClient(conn)
 
 	posts, err := bClient.ListPosts(ctx, &pb.ListPostsReq{})
 	if err != nil {
